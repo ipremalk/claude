@@ -8,6 +8,23 @@ vi.mock("../MarkdownRenderer", () => ({
   MarkdownRenderer: ({ content }: { content: string }) => <div>{content}</div>,
 }));
 
+// Mock the ToolInvocationBadge component
+vi.mock("../ToolInvocationBadge", () => ({
+  ToolInvocationBadge: ({
+    toolName,
+    args,
+  }: {
+    toolName: string;
+    args?: Record<string, unknown>;
+  }) => (
+    <div data-testid="tool-badge">
+      {args?.command === "create"
+        ? `Creating ${(args?.path as string)?.split("/").pop() || "file"}`
+        : toolName}
+    </div>
+  ),
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -65,7 +82,7 @@ test("MessageList renders messages with parts", () => {
           type: "tool-invocation",
           toolInvocation: {
             toolCallId: "asdf",
-            args: {},
+            args: { command: "create", path: "/src/Button.tsx" },
             toolName: "str_replace_editor",
             state: "result",
             result: "Success",
@@ -78,7 +95,7 @@ test("MessageList renders messages with parts", () => {
   render(<MessageList messages={messages} />);
 
   expect(screen.getByText("Creating your component...")).toBeDefined();
-  expect(screen.getByText("str_replace_editor")).toBeDefined();
+  expect(screen.getByTestId("tool-badge")).toBeDefined();
 });
 
 test("MessageList shows content for assistant message with content", () => {
